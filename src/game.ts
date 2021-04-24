@@ -5,6 +5,7 @@ export default class Demo extends Phaser.Scene
     platforms;
     tube;
     player;
+    walls;
     cursors;
 
     cursor: Phaser.GameObjects.Image;
@@ -52,7 +53,6 @@ export default class Demo extends Phaser.Scene
         this.cameras.main.startFollow(this.player);
 
         this.player.setBounce(0.2);
-        this.player.setCollideWorldBounds(true);
         this.player.body.setGravityY(10);
 
         this.physics.add.collider(this.player, this.platforms);
@@ -134,8 +134,8 @@ export default class Demo extends Phaser.Scene
         this.cameras.main.setBackgroundColor(hexColor);
 
 
-        const crosshairX = this.input.mousePointer.x + this.cameras.main.worldView.x
-        const crosshairY = this.input.mousePointer.y + this.cameras.main.worldView.y
+        const crosshairX = this.input.mousePointer.x //+ this.cameras.main.worldView.x
+        const crosshairY = this.input.mousePointer.y //+ this.cameras.main.worldView.y
         this.cursor.setPosition(crosshairX, crosshairY)
 
 
@@ -143,12 +143,12 @@ export default class Demo extends Phaser.Scene
     }
 }
 
-const ZOOM = 1.2;
+const ZOOM = 1.5;
 const config = {
     type: Phaser.AUTO,
     backgroundColor: '#125555',
-    width: 480,
-    height: 640,
+    width: 320,
+    height: 480,
     zoom: ZOOM,
     pixelArt: true,
     scene: Demo,
