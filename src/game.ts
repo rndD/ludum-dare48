@@ -19,9 +19,9 @@ export default class Demo extends Phaser.Scene
         this.load.image('logo', 'assets/phaser3-logo.png');
         this.load.image('sky', 'assets/sky.png');
         this.load.image('ground', 'assets/platform.png');
-        this.load.spritesheet('duckleft',
-            'assets/duckleft.png',
-            { frameWidth: 50, frameHeight: 50 }
+        this.load.spritesheet('dude',
+            'assets/duck.png',
+            { frameWidth: 16, frameHeight: 16 }
         );
 
         this.load.image('star', 'assets/star.png');
@@ -47,7 +47,7 @@ export default class Demo extends Phaser.Scene
         this.platforms.create(750, 220, 'ground');
 
 
-        this.player = this.physics.add.sprite(100, 450, 'duckleft')
+        this.player = this.physics.add.sprite(100, 450, 'dude')
 
         this.cameras.main.startFollow(this.player);
 
@@ -60,27 +60,27 @@ export default class Demo extends Phaser.Scene
 
         this.anims.create({
             key: 'left',
-            frames: this.anims.generateFrameNumbers('duckleft', { start: 0, end: 5 }),
+            frames: this.anims.generateFrameNumbers('dude', { start: 1, end: 2}),
             frameRate: 10,
             repeat: -1
         });
 
         this.anims.create({
             key: 'turn',
-            frames: [ { key: 'duckleft', frame: 2 } ],
+            frames: [ { key: 'dude', frame: 2 } ],
             frameRate: 20
         });
 
         this.anims.create({
           key: 'up',
-          frames: this.anims.generateFrameNumbers('duckleft', { start: 1, end: 3 }),
+          frames: this.anims.generateFrameNumbers('dude', { start: 1, end: 2 }),
           frameRate: 10,
           repeat: -1
         });
 
         this.anims.create({
             key: 'right',
-            frames: this.anims.generateFrameNumbers('duckleft', { start: 0, end: 5 }),
+            frames: this.anims.generateFrameNumbers('dude', { start: 3, end: 4 }),
             frameRate: 10,
             repeat: -1
         });
@@ -102,24 +102,23 @@ export default class Demo extends Phaser.Scene
 
     update() {
         this.cursors = this.input.keyboard.createCursorKeys();
-      //console.log(this.cursors)
       if (this.cursors.left.isDown)
         {
             this.player.setVelocityX(-100);
 
-            this.player.anims.play('left', true);
-        }
-        else if (this.cursors.right.isDown)
-        {
-            this.player.setVelocityX(100);
+                this.player.anims.play('left', true);
+            }
+            else if (this.cursors.right.isDown)
+            {
+                this.player.setVelocityX(100);
 
-            this.player.anims.play('right', true);
-        }
-        else if (this.cursors.up.isDown) {
+                this.player.anims.play('right', true);
+            }
+            else if (this.cursors.up.isDown) {
 
-        this.player.setVelocityY(-30);
-        this.player.anims.play('up', true);
-      } else {
+            this.player.setVelocityY(-30);
+            this.player.anims.play('up', true);
+        } else {
             this.player.setVelocityX(0);
             this.player.anims.play('turn', true);
         }
@@ -144,12 +143,12 @@ export default class Demo extends Phaser.Scene
     }
 }
 
-const ZOOM = 1.3;
+const ZOOM = 1.2;
 const config = {
     type: Phaser.AUTO,
     backgroundColor: '#125555',
-    width: 600,
-    height: 800,
+    width: 480,
+    height: 640,
     zoom: ZOOM,
     pixelArt: true,
     scene: Demo,
@@ -162,10 +161,19 @@ const config = {
     },
     callbacks: {
         postBoot: function (game) {
-          var config = game.config;
-          var style = game.canvas.style;
-          style.width = (ZOOM * config.width) + 'px';
-          style.height = (ZOOM * config.height) + 'px';
+          let canvas = document.querySelector("canvas");
+          let windowWidth = window.innerWidth;
+          let windowHeight = window.innerHeight;
+          let windowRatio = windowWidth / windowHeight;
+          let gameRatio = game.config.width / game.config.height;
+          if(windowRatio < gameRatio){
+              canvas.style.width = windowWidth + "px";
+              canvas.style.height = (windowWidth / gameRatio) + "px";
+          }
+          else{
+              canvas.style.width = (windowHeight * gameRatio) + "px";
+              canvas.style.height = windowHeight + "px";
+          }
         }
       },
     
