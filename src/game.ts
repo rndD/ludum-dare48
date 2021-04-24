@@ -20,7 +20,7 @@ export default class Demo extends Phaser.Scene
         this.load.image('ground', 'assets/platform.png');
         this.load.spritesheet('dude', 
             'assets/dude.png',
-            { frameWidth: 32, frameHeight: 48 }
+            { frameWidth: 50, frameHeight: 50 }
         );
         this.load.image('star', 'assets/star.png');
 
@@ -57,20 +57,20 @@ export default class Demo extends Phaser.Scene
 
         this.anims.create({
             key: 'left',
-            frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
+            frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 1 }),
             frameRate: 10,
             repeat: -1
         });
 
         this.anims.create({
             key: 'turn',
-            frames: [ { key: 'dude', frame: 4 } ],
+            frames: [ { key: 'dude', frame: 2 } ],
             frameRate: 20
         });
 
         this.anims.create({
             key: 'right',
-            frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
+            frames: this.anims.generateFrameNumbers('dude', { start: 3, end: 4 }),
             frameRate: 10,
             repeat: -1
         });
@@ -121,7 +121,7 @@ export default class Demo extends Phaser.Scene
         var space = new Phaser.Display.Color(0, 0, 0);
 
         var hexColor = Phaser.Display.Color.Interpolate.ColorWithColor(sky, space,this.cameras.main.height * 2, this.player.y);
-    
+
         this.cameras.main.setBackgroundColor(hexColor);
 
 
