@@ -18,7 +18,7 @@ export default class Demo extends Phaser.Scene
         this.load.image('logo', 'assets/phaser3-logo.png');
         this.load.image('sky', 'assets/sky.png');
         this.load.image('ground', 'assets/platform.png');
-        this.load.spritesheet('dude', 
+        this.load.spritesheet('dude',
             'assets/dude.png',
             { frameWidth: 50, frameHeight: 50 }
         );
@@ -33,7 +33,7 @@ export default class Demo extends Phaser.Scene
     {
         // this.add.shader('RGB Shift Field', 0, 0, 800, 600).setOrigin(0);
         // this.add.shader('Plasma', 0, 412, 800, 172).setOrigin(0);
-        
+
         this.input.setPollAlways();
         //this.add.image(400, 300, 'sky');
 
@@ -64,8 +64,15 @@ export default class Demo extends Phaser.Scene
 
         this.anims.create({
             key: 'turn',
-            frames: [ { key: 'dude', frame: 2 } ],
+            frames: [ { key: 'dude', frame: 1 } ],
             frameRate: 20
+        });
+
+        this.anims.create({
+          key: 'up',
+          frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 1 }),
+          frameRate: 10,
+          repeat: -1
         });
 
         this.anims.create({
@@ -92,8 +99,8 @@ export default class Demo extends Phaser.Scene
 
     update() {
         this.cursors = this.input.keyboard.createCursorKeys();
-
-        if (this.cursors.left.isDown)
+      console.log(this.cursors)
+      if (this.cursors.left.isDown)
         {
             this.player.setVelocityX(-100);
 
@@ -105,17 +112,17 @@ export default class Demo extends Phaser.Scene
 
             this.player.anims.play('right', true);
         }
-        else
-        {
+        else if (this.cursors.up.isDown) {
+
+        this.player.setVelocityY(-30);
+        this.player.anims.play('up', true);
+      } else {
             this.player.setVelocityX(0);
-
-            this.player.anims.play('turn');
+            this.player.anims.play('turn', true);
         }
 
-        if (this.cursors.up.isDown)
-        {
-            this.player.setVelocityY(-30);
-        }
+
+
 
         var sky = new Phaser.Display.Color(120, 120, 255);
         var space = new Phaser.Display.Color(0, 0, 0);
@@ -128,7 +135,7 @@ export default class Demo extends Phaser.Scene
         const crosshairX = this.input.mousePointer.x + this.cameras.main.worldView.x
         const crosshairY = this.input.mousePointer.y + this.cameras.main.worldView.y
         this.cursor.setPosition(crosshairX, crosshairY)
-        
+
 
 
     }
@@ -145,10 +152,10 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 5 },
-            debug: true 
+            debug: true
         }
     },
-    
+
 };
 
 const game = new Phaser.Game(config);
