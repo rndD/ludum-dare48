@@ -20,9 +20,10 @@ export default class Demo extends Phaser.Scene
         this.load.image('sky', 'assets/sky.png');
         this.load.image('ground', 'assets/platform.png');
         this.load.spritesheet('dude',
-            'assets/dude.png',
-            { frameWidth: 50, frameHeight: 50 }
+            'assets/duck.png',
+            { frameWidth: 16, frameHeight: 16 }
         );
+
         this.load.image('star', 'assets/star.png');
 
         this.load.glsl('bundle', 'assets/plasma-bundle.glsl.js');
@@ -46,7 +47,8 @@ export default class Demo extends Phaser.Scene
         this.platforms.create(750, 220, 'ground');
 
 
-        this.player = this.physics.add.sprite(100, 450, 'dude');
+        this.player = this.physics.add.sprite(100, 450, 'dude')
+
         this.cameras.main.startFollow(this.player);
 
         this.player.setBounce(0.2);
@@ -58,20 +60,20 @@ export default class Demo extends Phaser.Scene
 
         this.anims.create({
             key: 'left',
-            frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 1 }),
+            frames: this.anims.generateFrameNumbers('dude', { start: 1, end: 2}),
             frameRate: 10,
             repeat: -1
         });
 
         this.anims.create({
             key: 'turn',
-            frames: [ { key: 'dude', frame: 1 } ],
+            frames: [ { key: 'dude', frame: 2 } ],
             frameRate: 20
         });
 
         this.anims.create({
           key: 'up',
-          frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 1 }),
+          frames: this.anims.generateFrameNumbers('dude', { start: 1, end: 2 }),
           frameRate: 10,
           repeat: -1
         });
@@ -100,10 +102,9 @@ export default class Demo extends Phaser.Scene
 
     update() {
         this.cursors = this.input.keyboard.createCursorKeys();
-
-        if (this.cursors.left.isDown)
-            {
-                this.player.setVelocityX(-100);
+      if (this.cursors.left.isDown)
+        {
+            this.player.setVelocityX(-100);
 
                 this.player.anims.play('left', true);
             }
