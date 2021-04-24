@@ -18,10 +18,11 @@ export default class Demo extends Phaser.Scene
         this.load.image('logo', 'assets/phaser3-logo.png');
         this.load.image('sky', 'assets/sky.png');
         this.load.image('ground', 'assets/platform.png');
-        this.load.spritesheet('dude',
-            'assets/dude.png',
+        this.load.spritesheet('duckleft',
+            'assets/duckleft.png',
             { frameWidth: 50, frameHeight: 50 }
         );
+
         this.load.image('star', 'assets/star.png');
 
         this.load.glsl('bundle', 'assets/plasma-bundle.glsl.js');
@@ -45,7 +46,8 @@ export default class Demo extends Phaser.Scene
         this.platforms.create(750, 220, 'ground');
 
 
-        this.player = this.physics.add.sprite(100, 450, 'dude');
+        this.player = this.physics.add.sprite(100, 450, 'duckleft')
+
         this.cameras.main.startFollow(this.player);
 
         this.player.setBounce(0.2);
@@ -57,27 +59,27 @@ export default class Demo extends Phaser.Scene
 
         this.anims.create({
             key: 'left',
-            frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 1 }),
+            frames: this.anims.generateFrameNumbers('duckleft', { start: 0, end: 5 }),
             frameRate: 10,
             repeat: -1
         });
 
         this.anims.create({
             key: 'turn',
-            frames: [ { key: 'dude', frame: 1 } ],
+            frames: [ { key: 'duckleft', frame: 2 } ],
             frameRate: 20
         });
 
         this.anims.create({
           key: 'up',
-          frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 1 }),
+          frames: this.anims.generateFrameNumbers('duckleft', { start: 1, end: 3 }),
           frameRate: 10,
           repeat: -1
         });
 
         this.anims.create({
             key: 'right',
-            frames: this.anims.generateFrameNumbers('dude', { start: 3, end: 4 }),
+            frames: this.anims.generateFrameNumbers('duckleft', { start: 0, end: 5 }),
             frameRate: 10,
             repeat: -1
         });
@@ -99,7 +101,7 @@ export default class Demo extends Phaser.Scene
 
     update() {
         this.cursors = this.input.keyboard.createCursorKeys();
-      console.log(this.cursors)
+      //console.log(this.cursors)
       if (this.cursors.left.isDown)
         {
             this.player.setVelocityX(-100);
