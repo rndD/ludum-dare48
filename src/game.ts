@@ -9,6 +9,7 @@ export default class Demo extends Phaser.Scene
 
 
     wallLeftGroup: Phaser.GameObjects.Group;
+    obsticles: Phaser.GameObjects.Group;
     wallRightGroup: Phaser.GameObjects.Group;
 
 
@@ -23,6 +24,8 @@ export default class Demo extends Phaser.Scene
     {
         this.load.image('wall-l', 'assets/wall-l.png');
         this.load.image('wall-r', 'assets/wall-r.png');
+        this.load.image('obs1', 'assets/obstacle1.png');
+        this.load.image('obs2', 'assets/obstacle2.png');
         this.load.image('sky', 'assets/sky.png');
         this.load.image('ground', 'assets/platform.png');
         this.load.spritesheet('dude',
@@ -53,8 +56,9 @@ export default class Demo extends Phaser.Scene
         // this.platforms.create(750, 220, 'ground');
 
 
-         this.wallLeftGroup = this.physics.add.staticGroup();
-         this.wallRightGroup= this.physics.add.staticGroup();
+        this.wallLeftGroup = this.physics.add.staticGroup();
+        this.wallRightGroup= this.physics.add.staticGroup();
+        this.obsticles= this.physics.add.staticGroup();
 
         this.addWallsLeft(0);
         this.addWallsRight(0);
@@ -69,6 +73,7 @@ export default class Demo extends Phaser.Scene
 
         this.physics.add.collider(this.player, this.wallLeftGroup);
         this.physics.add.collider(this.player, this.wallRightGroup);
+        this.physics.add.collider(this.player, this.obsticles);
 
         this.player.body.setMaxVelocityY(30);
 
@@ -159,13 +164,32 @@ export default class Demo extends Phaser.Scene
 
 
     addWallsLeft(posY) {
-        const wall_l = this.add.tileSprite(0, posY, 16, 48*20, 'wall-l');
+        const h = 48*20;
+        const w = 16;
+        const wall_l = this.add.tileSprite(0, posY, w, h, 'wall-l');
         this.wallLeftGroup.add(wall_l);
+
+        // obs
+        [1,2].forEach(() => {
+            const y = Phaser.Math.Between(posY, posY+h);
+            const x = Phaser.Math.Between(w*2, w * 3);
+
+            this.obsticles.create(x, y, 'obs2');
+        });
     }
 
     addWallsRight(posY) {
-        const wall_l = this.add.tileSprite(+this.game.config.width - 16, posY, 16, 48*20, 'wall-r');
+        const h = 48*20;
+        const w = 16;
+        const wall_l = this.add.tileSprite(+this.game.config.width - w, posY, w, h, 'wall-r');
         this.wallRightGroup.add(wall_l);
+
+        // obs
+        [1,2].forEach(() => {
+            const y = Phaser.Math.Between(posY, posY+h);
+            const x = Phaser.Math.Between(+this.game.config.width - w*3, +this.game.config.width - w * 2);
+            this.obsticles.create(x, y, 'obs1');
+        });
     }
 }
 
