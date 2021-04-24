@@ -134,8 +134,8 @@ export default class Demo extends Phaser.Scene
         this.cameras.main.setBackgroundColor(hexColor);
 
 
-        const crosshairX = this.input.mousePointer.x //+ this.cameras.main.worldView.x
-        const crosshairY = this.input.mousePointer.y //+ this.cameras.main.worldView.y
+        const crosshairX = this.input.mousePointer.x + this.cameras.main.worldView.x
+        const crosshairY = this.input.mousePointer.y + this.cameras.main.worldView.y
         this.cursor.setPosition(crosshairX, crosshairY)
 
 
@@ -147,9 +147,16 @@ const ZOOM = 1.5;
 const config = {
     type: Phaser.AUTO,
     backgroundColor: '#125555',
-    width: 320,
-    height: 480,
+    // width: 320,
+    // height: 480,
     zoom: ZOOM,
+    scale: {
+        mode: Phaser.Scale.FIT,
+        parent: 'body',
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: 480,
+        height: 480
+    },
     pixelArt: true,
     scene: Demo,
     physics: {
@@ -159,24 +166,6 @@ const config = {
             debug: true
         }
     },
-    callbacks: {
-        postBoot: function (game) {
-          let canvas = document.querySelector("canvas");
-          let windowWidth = window.innerWidth;
-          let windowHeight = window.innerHeight;
-          let windowRatio = windowWidth / windowHeight;
-          let gameRatio = game.config.width / game.config.height;
-          if(windowRatio < gameRatio){
-              canvas.style.width = windowWidth + "px";
-              canvas.style.height = (windowWidth / gameRatio) + "px";
-          }
-          else{
-              canvas.style.width = (windowHeight * gameRatio) + "px";
-              canvas.style.height = windowHeight + "px";
-          }
-        }
-      },
-    
 };
 
 const game = new Phaser.Game(config);
