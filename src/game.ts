@@ -3,6 +3,7 @@ import 'phaser';
 export default class Demo extends Phaser.Scene
 {
     platforms;
+    tube;
     player;
     cursors;
 
@@ -141,12 +142,14 @@ export default class Demo extends Phaser.Scene
     }
 }
 
-
+const ZOOM = 1.3;
 const config = {
     type: Phaser.AUTO,
     backgroundColor: '#125555',
-    width: 800,
-    height: 600,
+    width: 600,
+    height: 800,
+    zoom: ZOOM,
+    pixelArt: true,
     scene: Demo,
     physics: {
         default: 'arcade',
@@ -155,7 +158,15 @@ const config = {
             debug: true
         }
     },
-
+    callbacks: {
+        postBoot: function (game) {
+          var config = game.config;
+          var style = game.canvas.style;
+          style.width = (ZOOM * config.width) + 'px';
+          style.height = (ZOOM * config.height) + 'px';
+        }
+      },
+    
 };
 
 const game = new Phaser.Game(config);
