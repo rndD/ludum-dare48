@@ -24,7 +24,7 @@ export const config: GameConfig = {
     physics: {
         default: 'matter',
         matter: {
-            gravity: { y: 1 },
+            gravity: { y: -1.5 },
             enableSleeping: true,
             debug: true
         }

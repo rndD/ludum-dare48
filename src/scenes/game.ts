@@ -6,6 +6,8 @@ import TileSprite = Phaser.GameObjects.TileSprite
 export class Game extends Phaser.Scene
 {
     player: Phaser.Physics.Matter.Sprite;
+    blackHole: Phaser.GameObjects.Group;
+    circleHole: Phaser.Geom.Ellipse;
     cursors;
 
 
@@ -47,6 +49,7 @@ export class Game extends Phaser.Scene
         this.load.glsl('bundle', 'assets/plasma-bundle.glsl.js');
         this.load.glsl('stars', 'assets/starfields.glsl.js');
         this.load.image('cursor', 'assets/bomb.png');
+        this.load.image('bomb', 'assets/bomb.png');
         this.load.image('hook', 'assets/bomb.png');
     }
 
@@ -56,6 +59,10 @@ export class Game extends Phaser.Scene
         // this.matter.world.engine.velocityIterations=20;
         // this.matter.world.update30Hz();
 
+        this.blackHole = this.add.group([], {key: 'bomb', frameQuantity: 100});
+        this.circleHole = new Phaser.Geom.Ellipse(100, 100, 200, 100);
+
+        Phaser.Actions.PlaceOnEllipse(this.blackHole.getChildren(), this.circleHole);
 
         this.input.setPollAlways();
 
@@ -68,8 +75,9 @@ export class Game extends Phaser.Scene
         this.player = this.matter.add.sprite(100, 50, 'dude').setScale(0.5);
         this.cameras.main.startFollow(this.player);
 
-        this.player.setBounce(0);
+        this.player.setBounce(0.05);
         this.player.setFriction(0);
+        this.player.setFrictionAir(0.5);
         this.player.setMass(0.1);
         
         // this.hook.setVisible(false);
@@ -104,7 +112,7 @@ export class Game extends Phaser.Scene
 
         this.anims.create({
             key: 'up',
-            frames: this.anims.generateFrameNumbers('dude', { start: 8, end: 9}),
+            frames: this.anims.generateFrameNumbers('dude', { start: 85, end: 9}),
             frameRate: 10,
             repeat: -1
         });
@@ -140,7 +148,7 @@ export class Game extends Phaser.Scene
         this.hookInPosition = null;
 
         this.hook = this.matter.add.image(this.player.x, this.player.y, 'hook');
-        this.hook.setBounce(0);
+        this.hook.setIgnoreGravity(true);
         this.hook.setPosition(this.player.x, this.player.y);
         this.collisionCatergories.addHook(this.hook);
         // this.hook.se(0, 0);
@@ -170,7 +178,7 @@ export class Game extends Phaser.Scene
 
     update() {
         // this.bg.tilePositionY++;
-        
+        Phaser.Actions.RotateAround(this.blackHole.getChildren(), this.circleHole, 3);
 
         this.cursors = this.input.keyboard.createCursorKeys();
         // do not rotate player 
@@ -179,6 +187,10 @@ export class Game extends Phaser.Scene
         if (this.hookState === 'hooked' && this.hookInPosition) {
             this.hook.setVelocity(0,0);
             this.hook.setPosition(this.hookInPosition.x, this.hookInPosition.y);
+        }
+
+        if(this.rope){
+            this.rope.length -= 1;
         }
 
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -198,7 +210,7 @@ export class Game extends Phaser.Scene
             this.player.setVelocityY(-3);
             this.player.anims.play('up', true);
         } else {
-            this.player.setVelocityX(0);
+            // this.player.setVelocityX(0);
             this.player.anims.play('turn', true);
         }
 
@@ -210,8 +222,6 @@ export class Game extends Phaser.Scene
         var hexColor = Phaser.Display.Color.Interpolate.ColorWithColor(sky, space,this.cameras.main.height * 2, this.player.y);
 
         this.cameras.main.setBackgroundColor(hexColor);
-
-
 
         const crosshairX = this.input.mousePointer.x + this.cameras.main.worldView.x;
         const crosshairY = this.input.mousePointer.y + this.cameras.main.worldView.y;
