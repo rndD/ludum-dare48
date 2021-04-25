@@ -1,16 +1,17 @@
 import 'phaser';
+import { Physics } from 'phaser';
 
 export default class Demo extends Phaser.Scene
 {
     platforms;
     tube;
-    player;
+    player: Phaser.Physics.Matter.Sprite;
     cursors;
 
 
-    wallLeftGroup: Phaser.GameObjects.Group;
-    obsticles: Phaser.GameObjects.Group;
-    wallRightGroup: Phaser.GameObjects.Group;
+    wallLeftGroup: Phaser.GameObjects.Sprite[] = [];
+    obsticles: Phaser.Physics.Matter.Image[] = [];
+    wallRightGroup: Phaser.GameObjects.Sprite[] = [];
 
 
     cursor: Phaser.GameObjects.Image;
@@ -56,26 +57,23 @@ export default class Demo extends Phaser.Scene
         // this.platforms.create(750, 220, 'ground');
 
 
-        this.wallLeftGroup = this.physics.add.staticGroup();
-        this.wallRightGroup= this.physics.add.staticGroup();
-        this.obsticles= this.physics.add.staticGroup();
-
         this.addWallsLeft(0);
         this.addWallsRight(0);
 
 
-        this.player = this.physics.add.sprite(100, 50, 'dude');
+        this.player = this.matter.add.sprite(100, 50, 'dude');
 
         this.cameras.main.startFollow(this.player);
 
         this.player.setBounce(0.2);
-        this.player.body.setGravityY(10);
+        // this.player.body.setGravityY(10);
+        // this.player
 
-        this.physics.add.collider(this.player, this.wallLeftGroup);
-        this.physics.add.collider(this.player, this.wallRightGroup);
-        this.physics.add.collider(this.player, this.obsticles);
+        // this.physics.add.collider(this.player, this.wallLeftGroup);
+        // this.physics.add.collider(this.player, this.wallRightGroup);
+        // this.physics.add.collider(this.player, this.obsticles);
 
-        this.player.body.setMaxVelocityY(30);
+        // this.player.setMaxVelocityY(30);
 
         this.anims.create({
             key: 'left',
@@ -144,18 +142,18 @@ export default class Demo extends Phaser.Scene
         this.cursor.setPosition(crosshairX, crosshairY);
 
         // recycling walls 
-        this.wallLeftGroup.getChildren().forEach((wall: Phaser.GameObjects.TileSprite) => {
+        this.wallLeftGroup.forEach((wall: Phaser.GameObjects.Sprite, i) => {
             const bottomY = wall.getBottomCenter().y;
             if(bottomY + this.cameras.main.height < this.cameras.main.worldView.centerY){
-                this.wallLeftGroup.killAndHide(wall);
-                this.wallLeftGroup.remove(wall);
-                this.wallRightGroup.killAndHide(wall);
-                this.wallRightGroup.remove(wall);
+                this.wallLeftGroup[i].destroy();
+                this.wallRightGroup[i].destroy();
+                this.wallLeftGroup.splice(i, 1);
+                this.wallRightGroup.splice(i, 1);
             }
         });
    
         // adding new platforms
-        let lastWallBottomY = (this.wallLeftGroup.getChildren()[this.wallLeftGroup.getLength() - 1] as Phaser.GameObjects.TileSprite).getBottomCenter().y;
+        let lastWallBottomY = (this.wallLeftGroup[this.wallLeftGroup.length - 1] as Phaser.GameObjects.Sprite).getBottomCenter().y;
         if(this.cameras.main.worldView.centerY + (this.cameras.main.height / 2) > lastWallBottomY){
             this.addWallsLeft(lastWallBottomY);
             this.addWallsRight(lastWallBottomY);
@@ -166,29 +164,38 @@ export default class Demo extends Phaser.Scene
     addWallsLeft(posY) {
         const h = 48*20;
         const w = 16;
-        const wall_l = this.add.tileSprite(0, posY, w, h, 'wall-l');
-        this.wallLeftGroup.add(wall_l);
+        const wall = this.matter.add.sprite(0, posY, 'wall-l');
+        wall.setStatic(true);
+        this.wallLeftGroup.push(wall);
 
         // obs
         [1,2].forEach(() => {
             const y = Phaser.Math.Between(posY, posY+h);
             const x = Phaser.Math.Between(w*2, w * 3);
+            const o = this.matter.add.image(x, y, 'obs2');
+            o.setStatic(true);
 
-            this.obsticles.create(x, y, 'obs2');
+            this.obsticles.push(o);
         });
     }
 
     addWallsRight(posY) {
         const h = 48*20;
         const w = 16;
-        const wall_l = this.add.tileSprite(+this.game.config.width - w, posY, w, h, 'wall-r');
-        this.wallRightGroup.add(wall_l);
+        // const wall_l = this.add.tileSprite(+this.game.config.width - w, posY, w, h, 'wall-r');
+        const wall = this.matter.add.sprite(+this.game.config.width - w, posY, 'wall-r');
+        wall.setStatic(true);
+        this.wallRightGroup.push(wall);
 
         // obs
         [1,2].forEach(() => {
             const y = Phaser.Math.Between(posY, posY+h);
             const x = Phaser.Math.Between(+this.game.config.width - w*3, +this.game.config.width - w * 2);
-            this.obsticles.create(x, y, 'obs1');
+
+            const o = this.matter.add.image(x, y, 'obs1');
+            o.setStatic(true);
+
+            this.obsticles.push(o);
         });
     }
 }
@@ -211,9 +218,10 @@ const config = {
     pixelArt: true,
     scene: Demo,
     physics: {
-        default: 'arcade',
-        arcade: {
+        default: 'matter',
+        matter: {
             gravity: { y: 5 },
+            enableSleeping: true,
             debug: true
         }
     },
