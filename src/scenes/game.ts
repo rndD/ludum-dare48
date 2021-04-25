@@ -8,19 +8,27 @@ export class Game extends Phaser.Scene
     player: Phaser.Physics.Matter.Sprite;
     cursors;
 
+    hole;
+    holeEmitter: Phaser.GameObjects.Particles.ParticleEmitter;
+    holeSpeed = Phaser.Math.GetSpeed(100, 6);
+
 
     wallLeftGroup: Phaser.GameObjects.TileSprite[] = [];
     obsticles: Phaser.Physics.Matter.Image[] = [];
     wallRightGroup: Phaser.GameObjects.TileSprite[] = [];
 
+
+
     collisionCatergories: CollisionCategories = new CollisionCategories();
 
     cursor: Phaser.GameObjects.Image;
     bg: TileSprite
+
     hook: Phaser.Physics.Matter.Image;
     hookState: 'ready' | 'reload' | 'hooked' | 'shooted' = 'ready';
     hookInPosition: Phaser.Math.Vector2;
     rope: MatterJS.ConstraintType;
+    hookedObject: Phaser.Physics.Matter.Image;
 
     constructor ()
     {
@@ -33,22 +41,19 @@ export class Game extends Phaser.Scene
         this.load.image('wall-r', 'assets/wall-r.png');
         this.load.image('obs1', 'assets/obstacle1.png');
         this.load.image('obs2', 'assets/obstacle2.png');
-        this.load.image('stars', 'assets/stars.png');
-        this.load.image('sky', 'assets/sky.png');
-        this.load.image('ground', 'assets/platform.png');
-        this.load.spritesheet('dude',
+        this.load.spritesheet('duck',
             'assets/duck.png',
             { frameWidth: 100, frameHeight: 100 }
         );
 
 
-        this.load.image('star', 'assets/star.png');
+        this.load.image('stars', 'assets/stars.png');
 
-        this.load.glsl('bundle', 'assets/plasma-bundle.glsl.js');
-        this.load.glsl('stars', 'assets/starfields.glsl.js');
         this.load.image('cursor', 'assets/bomb.png');
         this.load.image('bomb', 'assets/bomb.png');
-        this.load.image('hook', 'assets/bomb.png');
+        this.load.image('hook', 'assets/hook.png');
+        this.load.image('barrel', 'assets/barrel.png');
+        this.load.image('box', 'assets/box.png');
         this.load.atlas('flares', 'assets/flares_2.png', 'assets/flares.json');
     }
 
@@ -60,18 +65,18 @@ export class Game extends Phaser.Scene
         const particles = this.add.particles('flares');
 
 
-        var well = particles.createGravityWell({
+        this.hole = particles.createGravityWell({
             x: 200,
-            y: -100,
+            y: -300,
             power: 3,
             epsilon: 300,
             gravity: 300
         });
 
-        var emitter = particles.createEmitter({
+        this.holeEmitter = particles.createEmitter({
             frame: [ 'red', 'green', 'blue' ],
             x: 450,
-            y: -100,
+            y: -300,
             lifespan: 12000,
             speed: 80,
             scale: { start: 0.5, end: 0.2 },
@@ -87,7 +92,7 @@ export class Game extends Phaser.Scene
         this.addWallsRight(0);
 
 
-        this.player = this.matter.add.sprite(100, 50, 'dude').setScale(0.4);
+        this.player = this.matter.add.sprite(100, 50, 'duck').setScale(0.4);
         this.cameras.main.startFollow(this.player);
 
         this.player.setBounce(0.05);
@@ -114,27 +119,27 @@ export class Game extends Phaser.Scene
 
         this.anims.create({
             key: 'left',
-            frames: this.anims.generateFrameNumbers('dude', { start: 4, end: 7}),
+            frames: this.anims.generateFrameNumbers('duck', { start: 4, end: 7}),
             frameRate: 10,
             repeat: -1
         });
 
         this.anims.create({
             key: 'turn',
-            frames: [ { key: 'dude', frame: 10} ],
+            frames: [ { key: 'duck', frame: 10} ],
             frameRate: 20
         });
 
         this.anims.create({
             key: 'up',
-            frames: this.anims.generateFrameNumbers('dude', { start: 85, end: 9}),
+            frames: this.anims.generateFrameNumbers('duck', { start: 8, end: 9}),
             frameRate: 10,
             repeat: -1
         });
 
         this.anims.create({
             key: 'right',
-            frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
+            frames: this.anims.generateFrameNumbers('duck', { start: 0, end: 3 }),
             frameRate: 10,
             repeat: -1
         });
@@ -144,11 +149,7 @@ export class Game extends Phaser.Scene
 
         this.input.on('pointerup', () => {
             if (this.hookState === 'hooked') {
-                this.matter.world.removeConstraint(this.rope);
-                this.rope = null;
-                this.hook.destroy();
-                this.hook = null;
-                this.hookState = 'ready';
+                this.unHook();
 
                 return;
             }
@@ -157,6 +158,13 @@ export class Game extends Phaser.Scene
         });
 
         
+    }
+
+    unHook() {
+        this.matter.world.removeConstraint(this.rope);
+        this.rope = null;
+        this.hookState = 'ready';
+        this.hookedObject = null;
     }
 
     shootHook() {
@@ -176,22 +184,35 @@ export class Game extends Phaser.Scene
         this.hook.setOnCollide((e: any) => {
             if (this.hookState === 'shooted') {
 
-                const {x,y} = e.activeContacts[0].vertex;
-                this.hookInPosition = {x ,y} as Phaser.Math.Vector2;
                 this.hookState = 'hooked';
+
+                // (e.bodyB as MatterJS.BodyType);
+                
+                // @ts-ignore
+                // let compoundBody = Phaser.Physics.Matter.Matter.Body.create({
+                //     parts: [ e.bodyB, e.bodyA ]
+                // });
+                // console.log(Object.assign({}, e.activeContacts));
                 this.rope = this.matter.add.constraint(
                     this.player as unknown as MatterJS.BodyType,
-                    this.hook as unknown as MatterJS.BodyType, 
-                    Phaser.Math.Distance.BetweenPoints(this.player, this.hook),
-                    0.1
+                    e.bodyA,//this.hook as unknown as MatterJS.BodyType, 
+                    Phaser.Math.Distance.BetweenPoints(this.player, e.bodyA),
+                    0.2
                 );
+                this.hookedObject = e.bodyA;
+                this.hook.destroy();
+                this.hook = null;
+               
             }
         });
 
-        this.hook.thrust(0.015);
+        this.hook.thrust(0.01);
     }
 
-    update() {
+    update(time, delta: number) {
+        this.hole.y += this.holeSpeed * delta;
+        this.holeEmitter.setPosition(this.hole.x + 250, this.hole.y);
+
         // this.bg.tilePositionY++;
 
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -204,29 +225,33 @@ export class Game extends Phaser.Scene
         }
 
         if(this.rope){
-            this.rope.length -= 1;
+            this.rope.length -= 2;
         }
 
         this.cursors = this.input.keyboard.createCursorKeys();
         if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-5);
+            this.player.setVelocityX(-2);
 
-                this.player.anims.play('left', true);
-            }
-            else if (this.cursors.right.isDown)
-            {
-                this.player.setVelocityX(5);
+            this.player.anims.play('left', true);
+        } else if (this.cursors.right.isDown) {
+            this.player.setVelocityX(2);
 
-                this.player.anims.play('right', true);
-            }
-            else if (this.cursors.up.isDown) {
-
-            this.player.setVelocityY(-3);
-            this.player.anims.play('up', true);
+            this.player.anims.play('right', true);
         } else {
             // this.player.setVelocityX(0);
-            this.player.anims.play('turn', true);
+            if (!this.cursors.down.isDown && ! this.cursors.up.isDown) {
+
+                this.player.anims.play('turn', true);
+            }
         }
+
+        if (this.cursors.down.isDown) {
+            this.player.setVelocityY(2);
+            this.player.anims.play('up', true);
+        } else if (this.cursors.up.isDown) {
+            this.player.setVelocityY(-2);
+            this.player.anims.play('up', true);
+        } 
 
         // this.add.tileSprite(0,200, 0, 0, 'grass')
 
@@ -244,7 +269,7 @@ export class Game extends Phaser.Scene
         // recycling walls 
         this.wallLeftGroup.forEach((wall: Phaser.GameObjects.TileSprite, i) => {
             const bottomY = wall.getBottomCenter().y;
-            if(bottomY + this.cameras.main.height < this.cameras.main.worldView.centerY){
+            if (bottomY + this.cameras.main.height < this.cameras.main.worldView.centerY){
                 this.wallLeftGroup[i].destroy();
                 this.wallRightGroup[i].destroy();
                 this.wallLeftGroup.splice(i, 1);
@@ -254,7 +279,7 @@ export class Game extends Phaser.Scene
    
         // adding new platforms
         let lastWallBottomY = (this.wallLeftGroup[this.wallLeftGroup.length - 1] as Phaser.GameObjects.TileSprite).getBottomCenter().y;
-        if(this.cameras.main.worldView.centerY + (this.cameras.main.height / 2) > lastWallBottomY){
+        if (this.cameras.main.worldView.centerY + (this.cameras.main.height / 2) > lastWallBottomY){
             this.addWallsLeft(lastWallBottomY);
             this.addWallsRight(lastWallBottomY);
         }
@@ -272,15 +297,16 @@ export class Game extends Phaser.Scene
         this.collisionCatergories.addWall(wall);
 
         // obs
-        [1,2].forEach(() => {
+        [1,2,3,4,5].forEach(() => {
             const y = Phaser.Math.Between(posY, posY+h);
-            const x = Phaser.Math.Between(w*2, w * 3);
-            const o = this.matter.add.image(x, y, 'obs2');
-            o.setStatic(true);
+            const x = Phaser.Math.Between(50, 500);
+            const o = this.matter.add.image(x, y, Phaser.Utils.Array.GetRandom(['barrel', 'box']));
 
+            o.setRotation(Math.random() * 6);
+            o.setFrictionAir(0.9);
             this.obsticles.push(o);
 
-            this.collisionCatergories.addWall(o);
+            this.collisionCatergories.addBox(o);
         });
     }
 
@@ -293,17 +319,6 @@ export class Game extends Phaser.Scene
 
         this.collisionCatergories.addWall(wall);
 
-        // obs
-        [1,2].forEach(() => {
-            const y = Phaser.Math.Between(posY, posY+h);
-            const x = Phaser.Math.Between(+this.game.config.width - w*3, +this.game.config.width - w * 2);
-
-            const o = this.matter.add.image(x, y, 'obs1');
-            o.setStatic(true);
-
-            this.obsticles.push(o);
-
-            this.collisionCatergories.addWall(o);
-        });
+        
     }
 }

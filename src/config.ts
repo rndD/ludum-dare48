@@ -2,7 +2,7 @@ import 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig;
 import {Game} from './scenes/game';
 
-const ZOOM = 1.5;
+const ZOOM = 1;
 export const config: GameConfig = {
     type: Phaser.WEBGL,
     backgroundColor: '#578cbe',
@@ -18,7 +18,8 @@ export const config: GameConfig = {
         height: 480,
         // pixelArt: true, // ?
     },
-    // pixelArt: true,
+    // @ts-ignore
+    pixelArt: true,
     autoFocus: true,
     scene: Game,
     physics: {
