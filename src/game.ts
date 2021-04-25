@@ -1,6 +1,7 @@
 import 'phaser';
 import { Physics } from 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig
+import TileSprite = Phaser.GameObjects.TileSprite
 
 export default class Demo extends Phaser.Scene
 {
@@ -16,7 +17,7 @@ export default class Demo extends Phaser.Scene
 
 
     cursor: Phaser.GameObjects.Image;
-
+    bg: TileSprite
     constructor ()
     {
         super('demo');
@@ -73,7 +74,8 @@ export default class Demo extends Phaser.Scene
         this.player.setMass(0.1)
 
 
-      this.add.tileSprite(0, 0, 1000, 600, 'stars');
+      this.bg = this.add.tileSprite(0, 0, 1000, 100000, 'stars');
+
 
       // this.player.body.setGravityY(10);
         // this.player
@@ -117,10 +119,9 @@ export default class Demo extends Phaser.Scene
     }
 
     update() {
-
+      this.bg.tilePositionY++;
         this.player.setAngle(0);
-
-        this.cursors = this.input.keyboard.createCursorKeys();
+      this.cursors = this.input.keyboard.createCursorKeys();
         if (this.cursors.left.isDown)
           {
               this.player.setVelocityX(-5);
