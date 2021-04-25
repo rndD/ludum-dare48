@@ -133,6 +133,15 @@ export default class Demo extends Phaser.Scene
 
 
         this.input.on('pointerup', () => {
+            if (this.hookState === 'hooked') {
+                this.matter.world.removeConstraint(this.rope);
+                this.rope = null;
+                this.hook.setVisible(false);
+                this.hookState = 'ready';
+
+                return;
+            }
+
             this.hookInPosition = null;
             this.hook.setPosition(this.player.x, this.player.y);
             // this.hook.se(0, 0);
@@ -146,15 +155,18 @@ export default class Demo extends Phaser.Scene
         });
 
         this.hook.setOnCollide((e: any) => {
-            const {x,y} = e.activeContacts[0].vertex;
-            this.hookInPosition = {x ,y} as Phaser.Math.Vector2;
-            this.hookState = 'hooked';
-            this.rope = this.matter.add.constraint(
-                this.player as unknown as MatterJS.BodyType,
-                this.hook as unknown as MatterJS.BodyType, 
-                Phaser.Math.Distance.BetweenPoints(this.player, this.hook),
-                0
-            );
+            if (this.hookState === 'shooted') {
+
+                const {x,y} = e.activeContacts[0].vertex;
+                this.hookInPosition = {x ,y} as Phaser.Math.Vector2;
+                this.hookState = 'hooked';
+                this.rope = this.matter.add.constraint(
+                    this.player as unknown as MatterJS.BodyType,
+                    this.hook as unknown as MatterJS.BodyType, 
+                    Phaser.Math.Distance.BetweenPoints(this.player, this.hook),
+                    0
+                );
+            }
         });
     }
 
