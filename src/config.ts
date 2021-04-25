@@ -1,31 +1,32 @@
-export class CollisionCategories {
-    walls: number;
-    hook: number;
-    player: number;
+import 'phaser';
+import GameConfig = Phaser.Types.Core.GameConfig;
+import {Game} from './scenes/game';
 
-    init(scene: Phaser.Scene) {
-        this.walls = scene.matter.world.nextCategory();
-        this.hook = scene.matter.world.nextCategory();
-        this.player = scene.matter.world.nextCategory();
-    }
+const ZOOM = 1.5;
+export const config: GameConfig = {
+    type: Phaser.AUTO,
+    backgroundColor: '#578cbe',
 
-    addWall(wall: any) {
-        (wall as unknown as Phaser.Physics.Matter.Sprite).setCollisionCategory(this.walls);
-
-        return this;
-    }
-
-    addHook(hook: Phaser.Physics.Matter.Image) {
-        hook.setCollisionCategory(this.hook);
-        hook.setCollidesWith([this.walls]);
-
-        return this;
-    }
-
-    addPlayer(player: Phaser.Physics.Matter.Sprite) {
-        player.setCollisionCategory(this.player);
-        player.setCollidesWith([this.walls]);
-
-        return this;
-    }
-}
+    // width: 320,
+    // height: 480,
+    zoom: ZOOM,
+    scale: {
+        mode: Phaser.Scale.FIT,
+        parent: 'body',
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: 480,
+        height: 480,
+        // pixelArt: true, // ?
+    },
+    // pixelArt: true,
+    autoFocus: true,
+    scene: Game,
+    physics: {
+        default: 'matter',
+        matter: {
+            gravity: { y: 1 },
+            enableSleeping: true,
+            debug: true
+        }
+    },
+};
