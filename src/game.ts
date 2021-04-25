@@ -31,7 +31,7 @@ export default class Demo extends Phaser.Scene
         this.load.image('ground', 'assets/platform.png');
         this.load.spritesheet('dude',
             'assets/duck.png',
-            { frameWidth: 32, frameHeight: 32 }
+            { frameWidth: 100, frameHeight: 100 }
         );
 
         this.load.image('star', 'assets/star.png');
@@ -79,27 +79,27 @@ export default class Demo extends Phaser.Scene
 
         this.anims.create({
             key: 'left',
-            frames: this.anims.generateFrameNumbers('dude', { start: 2, end: 3}),
+            frames: this.anims.generateFrameNumbers('dude', { start: 4, end: 7}),
             frameRate: 10,
             repeat: -1
         });
 
         this.anims.create({
             key: 'turn',
-            frames: [ { key: 'dude', frame: 3 } ],
+            frames: [ { key: 'dude', frame: 10} ],
             frameRate: 20
         });
 
         this.anims.create({
           key: 'up',
-          frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 1}),
+          frames: this.anims.generateFrameNumbers('dude', { start: 8, end: 9}),
           frameRate: 10,
           repeat: -1
         });
 
         this.anims.create({
             key: 'right',
-            frames: this.anims.generateFrameNumbers('dude', { start: 4, end: 5 }),
+            frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
             frameRate: 10,
             repeat: -1
         });
