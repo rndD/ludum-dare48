@@ -4,7 +4,7 @@ import {Game} from './scenes/game';
 
 const ZOOM = 1.5;
 export const config: GameConfig = {
-    type: Phaser.AUTO,
+    type: Phaser.WEBGL,
     backgroundColor: '#578cbe',
 
     // width: 320,

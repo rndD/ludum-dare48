@@ -6,8 +6,6 @@ import TileSprite = Phaser.GameObjects.TileSprite
 export class Game extends Phaser.Scene
 {
     player: Phaser.Physics.Matter.Sprite;
-    blackHole: Phaser.GameObjects.Group;
-    circleHole: Phaser.Geom.Ellipse;
     cursors;
 
 
@@ -58,11 +56,27 @@ export class Game extends Phaser.Scene
         // this.matter.world.engine.positionIterations=20;
         // this.matter.world.engine.velocityIterations=20;
         // this.matter.world.update30Hz();
+        const particles = this.add.particles('bomb');
 
-        this.blackHole = this.add.group([], {key: 'bomb', frameQuantity: 100});
-        this.circleHole = new Phaser.Geom.Ellipse(100, 100, 200, 100);
 
-        Phaser.Actions.PlaceOnEllipse(this.blackHole.getChildren(), this.circleHole);
+        var well = particles.createGravityWell({
+            x: 150,
+            y: -100,
+            power: 3,
+            epsilon: 100,
+            gravity: 100
+        });
+
+        var emitter = particles.createEmitter({
+            // frame: [ 'red', 'green' ],
+            x: 400,
+            y: -100,
+            lifespan: 10000,
+            speed: 40,
+            scale: { start: 0.7, end: 0.2 },
+            blendMode: 'HARD_LIGHT'
+        });
+
 
         this.input.setPollAlways();
 
@@ -72,7 +86,7 @@ export class Game extends Phaser.Scene
         this.addWallsRight(0);
 
 
-        this.player = this.matter.add.sprite(100, 50, 'dude').setScale(0.5);
+        this.player = this.matter.add.sprite(100, 50, 'dude').setScale(0.4);
         this.cameras.main.startFollow(this.player);
 
         this.player.setBounce(0.05);
@@ -178,7 +192,6 @@ export class Game extends Phaser.Scene
 
     update() {
         // this.bg.tilePositionY++;
-        Phaser.Actions.RotateAround(this.blackHole.getChildren(), this.circleHole, 3);
 
         this.cursors = this.input.keyboard.createCursorKeys();
         // do not rotate player 
