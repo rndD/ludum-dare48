@@ -1,5 +1,6 @@
 import 'phaser';
 import { Physics } from 'phaser';
+import GameConfig = Phaser.Types.Core.GameConfig
 
 export default class Demo extends Phaser.Scene
 {
@@ -27,12 +28,14 @@ export default class Demo extends Phaser.Scene
         this.load.image('wall-r', 'assets/wall-r.png');
         this.load.image('obs1', 'assets/obstacle1.png');
         this.load.image('obs2', 'assets/obstacle2.png');
+        this.load.image('stars', 'assets/stars.png');
         this.load.image('sky', 'assets/sky.png');
         this.load.image('ground', 'assets/platform.png');
         this.load.spritesheet('dude',
             'assets/duck.png',
             { frameWidth: 100, frameHeight: 100 }
         );
+
 
         this.load.image('star', 'assets/star.png');
 
@@ -68,7 +71,11 @@ export default class Demo extends Phaser.Scene
         this.player.setBounce(0.2);
         this.player.setFriction(0.95);
         this.player.setMass(0.1)
-        // this.player.body.setGravityY(10);
+
+
+      this.add.tileSprite(0, 0, 1000, 600, 'stars');
+
+      // this.player.body.setGravityY(10);
         // this.player
 
         // this.physics.add.collider(this.player, this.wallLeftGroup);
@@ -105,6 +112,8 @@ export default class Demo extends Phaser.Scene
         });
 
         this.cursor = this.add.image(0, 0, 'cursor');
+
+
     }
 
     update() {
@@ -133,13 +142,15 @@ export default class Demo extends Phaser.Scene
               this.player.anims.play('turn', true);
         }
 
+        this.add.tileSprite(0,200, 0, 0, 'grass')
 
-        var sky = new Phaser.Display.Color(120, 120, 255);
+        var sky = new Phaser.Display.Color(87 ,140, 190);
         var space = new Phaser.Display.Color(0, 0, 0);
 
         var hexColor = Phaser.Display.Color.Interpolate.ColorWithColor(sky, space,this.cameras.main.height * 2, this.player.y);
 
         this.cameras.main.setBackgroundColor(hexColor);
+
 
 
         const crosshairX = this.input.mousePointer.x + this.cameras.main.worldView.x;
@@ -206,9 +217,10 @@ export default class Demo extends Phaser.Scene
 }
 
 const ZOOM = 1.5;
-const config = {
+const config:GameConfig = {
     type: Phaser.AUTO,
-    backgroundColor: '#125555',
+    backgroundColor: '#578cbe',
+
     // width: 320,
     // height: 480,
     zoom: ZOOM,
@@ -218,9 +230,9 @@ const config = {
         autoCenter: Phaser.Scale.CENTER_BOTH,
         width: 480,
         height: 480,
-        pixelArt: true, // ?
+        // pixelArt: true, // ?
     },
-    pixelArt: true,
+    //pixelArt: true,
     scene: Demo,
     physics: {
         default: 'matter',
