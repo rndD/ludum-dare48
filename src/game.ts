@@ -1,12 +1,11 @@
 import 'phaser';
 import { Physics } from 'phaser';
+import { CollisionCategories } from './config';
 import GameConfig = Phaser.Types.Core.GameConfig
 import TileSprite = Phaser.GameObjects.TileSprite
 
 export default class Demo extends Phaser.Scene
 {
-    platforms;
-    tube;
     player: Phaser.Physics.Matter.Sprite;
     cursors;
 
@@ -15,9 +14,15 @@ export default class Demo extends Phaser.Scene
     obsticles: Phaser.Physics.Matter.Image[] = [];
     wallRightGroup: Phaser.GameObjects.TileSprite[] = [];
 
+    collisionCatergories: CollisionCategories = new CollisionCategories();
 
     cursor: Phaser.GameObjects.Image;
     bg: TileSprite
+    hook: Phaser.Physics.Matter.Image;
+    hookState: 'ready' | 'reload' | 'hooked' | 'shooted' = 'ready';
+    hookInPosition: Phaser.Math.Vector2;
+    rope: MatterJS.ConstraintType;
+
     constructor ()
     {
         super('demo');
@@ -43,10 +48,15 @@ export default class Demo extends Phaser.Scene
         this.load.glsl('bundle', 'assets/plasma-bundle.glsl.js');
         this.load.glsl('stars', 'assets/starfields.glsl.js');
         this.load.image('cursor', 'assets/bomb.png');
+        this.load.image('hook', 'assets/bomb.png');
     }
 
     create ()
     {
+        // this.matter.world.engine.positionIterations=20;
+        // this.matter.world.engine.velocityIterations=20;
+        this.matter.world.update30Hz();
+
         // this.add.shader('RGB Shift Field', 0, 0, 800, 600).setOrigin(0);
         // this.add.shader('Plasma', 0, 412, 800, 172).setOrigin(0);
 
@@ -60,24 +70,30 @@ export default class Demo extends Phaser.Scene
         // this.platforms.create(50, 250, 'ground');
         // this.platforms.create(750, 220, 'ground');
 
+        this.collisionCatergories.init(this);
 
         this.addWallsLeft(0);
         this.addWallsRight(0);
 
 
-        this.player = this.matter.add.sprite(100, 50, 'dude');
-
+        this.player = this.matter.add.sprite(100, 50, 'dude').setScale(0.5);
         this.cameras.main.startFollow(this.player);
 
-        this.player.setBounce(0.2);
-        this.player.setFriction(0.95);
+        this.player.setBounce(0.1);
+        // this.player.setFriction(0.95);
         this.player.setMass(0.1)
+        
+        this.hook = this.matter.add.image(this.player.x, this.player.y, 'hook');
+        this.hook.setBounce(0);
+        this.hook.setVisible(false);
+
+        this.collisionCatergories.addHook(this.hook).addPlayer(this.player);
+
+        this.bg = this.add.tileSprite(-100, -100, 1000, 10000, 'stars');
 
 
-      this.bg = this.add.tileSprite(0, 0, 1000, 100000, 'stars');
-
-
-      // this.player.body.setGravityY(10);
+        // this.player.body.setGravityY(10);
+        // this.player.body.setGravityY(10);
         // this.player
 
         // this.physics.add.collider(this.player, this.wallLeftGroup);
@@ -116,31 +132,66 @@ export default class Demo extends Phaser.Scene
         this.cursor = this.add.image(0, 0, 'cursor');
 
 
+        this.input.on('pointerup', () => {
+            this.hookInPosition = null;
+            this.hook.setPosition(this.player.x, this.player.y);
+            // this.hook.se(0, 0);
+            this.hookState = "shooted";
+
+            const angle = Phaser.Math.Angle.BetweenPoints(this.player, this.cursor);
+            this.hook.setVisible(true);
+            this.hook.rotation = angle;
+            this.hook.thrust(0.015);
+
+        });
+
+        this.hook.setOnCollide((e: any) => {
+            const {x,y} = e.activeContacts[0].vertex;
+            this.hookInPosition = {x ,y} as Phaser.Math.Vector2;
+            this.hookState = 'hooked';
+            this.rope = this.matter.add.constraint(
+                this.player as unknown as MatterJS.BodyType,
+                this.hook as unknown as MatterJS.BodyType, 
+                Phaser.Math.Distance.BetweenPoints(this.player, this.hook),
+                0
+            );
+        });
     }
 
     update() {
-      this.bg.tilePositionY++;
+        // this.bg.tilePositionY++;
+        
+
+        this.cursors = this.input.keyboard.createCursorKeys();
+        // do not rotate player 
         this.player.setAngle(0);
-      this.cursors = this.input.keyboard.createCursorKeys();
-        if (this.cursors.left.isDown)
-          {
-              this.player.setVelocityX(-5);
 
-                  this.player.anims.play('left', true);
-              }
-              else if (this.cursors.right.isDown)
-              {
-                  this.player.setVelocityX(5);
+        if (this.hookState === 'ready') {
+            this.hook.setPosition(this.player.x, this.player.y);
+        } else if (this.hookState === 'hooked' && this.hookInPosition) {
+            this.hook.setVelocity(0,0);
+            this.hook.setPosition(this.hookInPosition.x, this.hookInPosition.y);
+        }
 
-                  this.player.anims.play('right', true);
-              }
-              else if (this.cursors.up.isDown) {
+        this.cursors = this.input.keyboard.createCursorKeys();
+        if (this.cursors.left.isDown) {
+            this.player.setVelocityX(-5);
 
-              this.player.setVelocityY(-3);
-              this.player.anims.play('up', true);
+                this.player.anims.play('left', true);
+            }
+            else if (this.cursors.right.isDown)
+            {
+                this.player.setVelocityX(5);
+
+                this.player.anims.play('right', true);
+            }
+            else if (this.cursors.up.isDown) {
+
+            this.player.setVelocityY(-3);
+            this.player.anims.play('up', true);
         } else {
-              this.player.setVelocityX(0);
-              this.player.anims.play('turn', true);
+            this.player.setVelocityX(0);
+            this.player.anims.play('turn', true);
         }
 
         this.add.tileSprite(0,200, 0, 0, 'grass')
@@ -186,6 +237,8 @@ export default class Demo extends Phaser.Scene
         this.matter.add.gameObject(wall, {isStatic: true});
         this.wallLeftGroup.push(wall);
 
+        this.collisionCatergories.addWall(wall);
+
         // obs
         [1,2].forEach(() => {
             const y = Phaser.Math.Between(posY, posY+h);
@@ -194,6 +247,8 @@ export default class Demo extends Phaser.Scene
             o.setStatic(true);
 
             this.obsticles.push(o);
+
+            this.collisionCatergories.addWall(o);
         });
     }
 
@@ -204,6 +259,8 @@ export default class Demo extends Phaser.Scene
         this.matter.add.gameObject(wall, {isStatic: true});
         this.wallRightGroup.push(wall);
 
+        this.collisionCatergories.addWall(wall);
+
         // obs
         [1,2].forEach(() => {
             const y = Phaser.Math.Between(posY, posY+h);
@@ -213,6 +270,8 @@ export default class Demo extends Phaser.Scene
             o.setStatic(true);
 
             this.obsticles.push(o);
+
+            this.collisionCatergories.addWall(o);
         });
     }
 }
