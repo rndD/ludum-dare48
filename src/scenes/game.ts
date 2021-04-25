@@ -49,6 +49,7 @@ export class Game extends Phaser.Scene
         this.load.image('cursor', 'assets/bomb.png');
         this.load.image('bomb', 'assets/bomb.png');
         this.load.image('hook', 'assets/bomb.png');
+        this.load.atlas('flares', 'assets/flares_2.png', 'assets/flares.json');
     }
 
     create ()
@@ -56,25 +57,25 @@ export class Game extends Phaser.Scene
         // this.matter.world.engine.positionIterations=20;
         // this.matter.world.engine.velocityIterations=20;
         // this.matter.world.update30Hz();
-        const particles = this.add.particles('bomb');
+        const particles = this.add.particles('flares');
 
 
         var well = particles.createGravityWell({
-            x: 150,
+            x: 200,
             y: -100,
             power: 3,
-            epsilon: 100,
-            gravity: 100
+            epsilon: 300,
+            gravity: 300
         });
 
         var emitter = particles.createEmitter({
-            // frame: [ 'red', 'green' ],
-            x: 400,
+            frame: [ 'red', 'green', 'blue' ],
+            x: 450,
             y: -100,
-            lifespan: 10000,
-            speed: 40,
-            scale: { start: 0.7, end: 0.2 },
-            blendMode: 'HARD_LIGHT'
+            lifespan: 12000,
+            speed: 80,
+            scale: { start: 0.5, end: 0.2 },
+            blendMode: 'ERASE'
         });
 
 
