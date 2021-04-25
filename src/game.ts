@@ -9,9 +9,9 @@ export default class Demo extends Phaser.Scene
     cursors;
 
 
-    wallLeftGroup: Phaser.GameObjects.Sprite[] = [];
+    wallLeftGroup: Phaser.GameObjects.TileSprite[] = [];
     obsticles: Phaser.Physics.Matter.Image[] = [];
-    wallRightGroup: Phaser.GameObjects.Sprite[] = [];
+    wallRightGroup: Phaser.GameObjects.TileSprite[] = [];
 
 
     cursor: Phaser.GameObjects.Image;
@@ -66,6 +66,8 @@ export default class Demo extends Phaser.Scene
         this.cameras.main.startFollow(this.player);
 
         this.player.setBounce(0.2);
+        this.player.setFriction(0.95);
+        this.player.setMass(0.1)
         // this.player.body.setGravityY(10);
         // this.player
 
@@ -106,26 +108,29 @@ export default class Demo extends Phaser.Scene
     }
 
     update() {
-      this.cursors = this.input.keyboard.createCursorKeys();
-      if (this.cursors.left.isDown)
-        {
-            this.player.setVelocityX(-100);
 
-                this.player.anims.play('left', true);
-            }
-            else if (this.cursors.right.isDown)
-            {
-                this.player.setVelocityX(100);
+        this.player.setAngle(0);
 
-                this.player.anims.play('right', true);
-            }
-            else if (this.cursors.up.isDown) {
+        this.cursors = this.input.keyboard.createCursorKeys();
+        if (this.cursors.left.isDown)
+          {
+              this.player.setVelocityX(-5);
 
-            this.player.setVelocityY(-30);
-            this.player.anims.play('up', true);
+                  this.player.anims.play('left', true);
+              }
+              else if (this.cursors.right.isDown)
+              {
+                  this.player.setVelocityX(5);
+
+                  this.player.anims.play('right', true);
+              }
+              else if (this.cursors.up.isDown) {
+
+              this.player.setVelocityY(-3);
+              this.player.anims.play('up', true);
         } else {
-            this.player.setVelocityX(0);
-            this.player.anims.play('turn', true);
+              this.player.setVelocityX(0);
+              this.player.anims.play('turn', true);
         }
 
 
@@ -142,7 +147,7 @@ export default class Demo extends Phaser.Scene
         this.cursor.setPosition(crosshairX, crosshairY);
 
         // recycling walls 
-        this.wallLeftGroup.forEach((wall: Phaser.GameObjects.Sprite, i) => {
+        this.wallLeftGroup.forEach((wall: Phaser.GameObjects.TileSprite, i) => {
             const bottomY = wall.getBottomCenter().y;
             if(bottomY + this.cameras.main.height < this.cameras.main.worldView.centerY){
                 this.wallLeftGroup[i].destroy();
@@ -153,7 +158,7 @@ export default class Demo extends Phaser.Scene
         });
    
         // adding new platforms
-        let lastWallBottomY = (this.wallLeftGroup[this.wallLeftGroup.length - 1] as Phaser.GameObjects.Sprite).getBottomCenter().y;
+        let lastWallBottomY = (this.wallLeftGroup[this.wallLeftGroup.length - 1] as Phaser.GameObjects.TileSprite).getBottomCenter().y;
         if(this.cameras.main.worldView.centerY + (this.cameras.main.height / 2) > lastWallBottomY){
             this.addWallsLeft(lastWallBottomY);
             this.addWallsRight(lastWallBottomY);
@@ -164,8 +169,9 @@ export default class Demo extends Phaser.Scene
     addWallsLeft(posY) {
         const h = 48*20;
         const w = 16;
-        const wall = this.matter.add.sprite(0, posY, 'wall-l');
-        wall.setStatic(true);
+        const wall = this.add.tileSprite(0, posY, w, h, 'wall-l');
+
+        this.matter.add.gameObject(wall, {isStatic: true});
         this.wallLeftGroup.push(wall);
 
         // obs
@@ -182,9 +188,8 @@ export default class Demo extends Phaser.Scene
     addWallsRight(posY) {
         const h = 48*20;
         const w = 16;
-        // const wall_l = this.add.tileSprite(+this.game.config.width - w, posY, w, h, 'wall-r');
-        const wall = this.matter.add.sprite(+this.game.config.width - w, posY, 'wall-r');
-        wall.setStatic(true);
+        const wall = this.add.tileSprite(+this.game.config.width - w, posY, w, h, 'wall-r');
+        this.matter.add.gameObject(wall, {isStatic: true});
         this.wallRightGroup.push(wall);
 
         // obs
@@ -220,7 +225,7 @@ const config = {
     physics: {
         default: 'matter',
         matter: {
-            gravity: { y: 5 },
+            gravity: { y: 1 },
             enableSleeping: true,
             debug: true
         }
