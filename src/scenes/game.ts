@@ -54,6 +54,7 @@ export class Game extends Phaser.Scene
         this.load.image('hook', 'assets/hook.png');
         this.load.image('barrel', 'assets/barrel.png');
         this.load.image('box', 'assets/box.png');
+        this.load.image('cookie', 'assets/cookie.png');
         this.load.atlas('flares', 'assets/flares_2.png', 'assets/flares.json');
     }
 
@@ -307,6 +308,19 @@ export class Game extends Phaser.Scene
             this.obsticles.push(o);
 
             this.collisionCatergories.addBox(o);
+        });
+
+        [1,2].forEach(() => {
+            const y = Phaser.Math.Between(posY, posY+h);
+            const x = Phaser.Math.Between(50, 500);
+            const c = this.matter.add.image(x, y, 'cookie');
+            c.setScale(0.5);
+
+            c.setFrictionAir(0.95);
+            c.setMass(0.01);
+            this.obsticles.push(c);
+
+            this.collisionCatergories.addBox(c);
         });
     }
 
