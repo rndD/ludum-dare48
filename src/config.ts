@@ -27,7 +27,7 @@ export const config: GameConfig = {
         matter: {
             gravity: { y: -1.5 },
             enableSleeping: true,
-            debug: true
+            debug: false 
         }
     },
 };

@@ -6,7 +6,8 @@ import TileSprite = Phaser.GameObjects.TileSprite
 export class Game extends Phaser.Scene
 {
     player: Phaser.Physics.Matter.Sprite;
-    cursors;
+    fat: number = 0;
+    fatText: Phaser.GameObjects.Text;
 
     hole;
     holeEmitter: Phaser.GameObjects.Particles.ParticleEmitter;
@@ -15,6 +16,7 @@ export class Game extends Phaser.Scene
 
     wallLeftGroup: Phaser.GameObjects.TileSprite[] = [];
     obsticles: Phaser.Physics.Matter.Image[] = [];
+    cookies: Phaser.Physics.Matter.Image[] = [];
     wallRightGroup: Phaser.GameObjects.TileSprite[] = [];
 
 
@@ -28,6 +30,8 @@ export class Game extends Phaser.Scene
     hookState: 'ready' | 'reload' | 'hooked' | 'shooted' = 'ready';
     hookInPosition: Phaser.Math.Vector2;
     rope: MatterJS.ConstraintType;
+    ropeGraphics: Phaser.GameObjects.Graphics;
+    ropeLine: Phaser.Geom.Line;
     hookedObject: Phaser.Physics.Matter.Image;
 
     constructor ()
@@ -49,7 +53,7 @@ export class Game extends Phaser.Scene
 
         this.load.image('stars', 'assets/stars.png');
 
-        this.load.image('cursor', 'assets/bomb.png');
+        this.load.image('crosshair', 'assets/crosshair.png');
         this.load.image('bomb', 'assets/bomb.png');
         this.load.image('hook', 'assets/hook.png');
         this.load.image('barrel', 'assets/barrel.png');
@@ -84,14 +88,14 @@ export class Game extends Phaser.Scene
             blendMode: 'ERASE'
         });
 
+        this.ropeLine = new Phaser.Geom.Line(100, 500, 700, 100);
+        this.ropeGraphics = this.add.graphics({ lineStyle: { width: 3, color: 0x8e593c} });
+        this.ropeGraphics.setVisible(false);
+
 
         this.input.setPollAlways();
 
         this.collisionCatergories.init(this);
-
-        this.addWallsLeft(0);
-        this.addWallsRight(0);
-
 
         this.player = this.matter.add.sprite(100, 50, 'duck').setScale(0.4);
         this.cameras.main.startFollow(this.player);
@@ -101,6 +105,9 @@ export class Game extends Phaser.Scene
         this.player.setFrictionAir(0.5);
         this.player.setMass(0.1);
         
+        this.addWallsLeft(0);
+        this.addWallsRight(0);
+        this.dropGarbage(true);
         // this.hook.setVisible(false);
 
         this.collisionCatergories.addPlayer(this.player);
@@ -145,7 +152,7 @@ export class Game extends Phaser.Scene
             repeat: -1
         });
 
-        this.cursor = this.add.image(0, 0, 'cursor');
+        this.cursor = this.add.image(0, 0, 'crosshair');
 
 
         this.input.on('pointerup', () => {
@@ -158,14 +165,21 @@ export class Game extends Phaser.Scene
             this.shootHook();
         });
 
+        this.fatText = this.add.text(10, 10, "Fat: You Are Not Fat");
+        this.fatText.setScrollFactor(0);
         
     }
 
     unHook() {
-        this.matter.world.removeConstraint(this.rope);
-        this.rope = null;
+        if (this.rope) {
+            this.matter.world.removeConstraint(this.rope);
+            this.rope = null;
+
+        }
+
         this.hookState = 'ready';
         this.hookedObject = null;
+        this.ropeGraphics.setVisible(false);
     }
 
     shootHook() {
@@ -173,14 +187,16 @@ export class Game extends Phaser.Scene
 
         this.hook = this.matter.add.image(this.player.x, this.player.y, 'hook');
         this.hook.setIgnoreGravity(true);
+        this.hook.setScale(1.3);
         this.hook.setPosition(this.player.x, this.player.y);
         this.collisionCatergories.addHook(this.hook);
-        // this.hook.se(0, 0);
         this.hookState = "shooted";
 
         const angle = Phaser.Math.Angle.BetweenPoints(this.player, this.cursor);
         this.hook.setVisible(true);
         this.hook.rotation = angle;
+
+        this.ropeGraphics.setVisible(true);
 
         this.hook.setOnCollide((e: any) => {
             if (this.hookState === 'shooted') {
@@ -198,7 +214,7 @@ export class Game extends Phaser.Scene
                     this.player as unknown as MatterJS.BodyType,
                     e.bodyA,//this.hook as unknown as MatterJS.BodyType, 
                     Phaser.Math.Distance.BetweenPoints(this.player, e.bodyA),
-                    0.2
+                    0.1
                 );
                 this.hookedObject = e.bodyA;
                 this.hook.destroy();
@@ -207,51 +223,143 @@ export class Game extends Phaser.Scene
             }
         });
 
-        this.hook.thrust(0.01);
+        this.hook.thrust(0.03);
+    }
+
+    eatCookie(c: any) {
+        c.gameObject.destroy();
+        this.fat++;
+        if (this.fat % 2 === 0) {
+            console.log('fatter')
+            this.player.setScale(this.player.scale + 0.1);
+
+            let fatState = 'Fit';
+
+            if (this.fat > 2) {
+                fatState = 'Fatty';
+            }
+            if (this.fat > 4) {
+                fatState = 'Chubby';
+            }
+            if (this.fat > 6) {
+                fatState = 'Rounded';
+            }
+            if (this.fat > 7) {
+                fatState = 'Almost that fat';
+            }
+            if (this.fat == 9) {
+                fatState = 'Close to the blackhole fat';
+            }
+
+            this.fatText.setText('Fat: ' + fatState);
+            this.fatText.setScale(1 + 0.1 * this.fat);
+        }
+
+        if (this.fat == 10) {
+            console.log('you win');
+            this.cameras.main.shake(300);
+            this.fatText.setText('YOU WIN, YOU ARE \n FATTER THAN BLACK HOLE!');
+            this.time.delayedCall(400, () => {
+
+                this.game.destroy(false);
+            });
+        
+        }
+    }
+
+    duckAnimation() {
+        if (this.player.body.velocity.x > 0.1) {
+            this.player.anims.play('right', true);
+        } else if (this.player.body.velocity.x < -0.2) {
+            this.player.anims.play('left', true);
+        } else {
+            if (this.player.body.velocity.y > 0) {
+                this.player.anims.play('turn', true);
+            } else {
+                this.player.anims.play('up', true);
+            }
+        }
+    }
+
+    checkDuckAlive() {
+        if (this.player.y - this.hole.y < 20) {
+            
+            this.fatText.setText('Fat: Dead');
+            this.cameras.main.on('camerafadeoutcomplete', function () {
+                location.reload();
+                // this.scene.restart();
+            }, this);
+
+
+            //  Get a random color
+            var red = Phaser.Math.Between(50, 255);
+            var green = Phaser.Math.Between(50, 255);
+            var blue = Phaser.Math.Between(50, 255);
+
+            this.cameras.main.fade(2000, red, green, blue);
+
+        }
     }
 
     update(time, delta: number) {
         this.hole.y += this.holeSpeed * delta;
         this.holeEmitter.setPosition(this.hole.x + 250, this.hole.y);
 
+        this.checkDuckAlive();
+
         // this.bg.tilePositionY++;
 
-        this.cursors = this.input.keyboard.createCursorKeys();
         // do not rotate player 
         this.player.setAngle(0);
 
-        if (this.hookState === 'hooked' && this.hookInPosition) {
-            this.hook.setVelocity(0,0);
-            this.hook.setPosition(this.hookInPosition.x, this.hookInPosition.y);
-        }
+        if (this.hookState === 'shooted' && this.hook) {
+            const p = this.player;
+            this.ropeLine.setTo(p.x, p.y, this.hook.x, this.hook.y);
+            this.ropeGraphics.clear();
+            this.ropeGraphics.strokeLineShape(this.ropeLine);
 
-        if(this.rope){
-            this.rope.length -= 2;
-        }
-
-        this.cursors = this.input.keyboard.createCursorKeys();
-        if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-2);
-
-            this.player.anims.play('left', true);
-        } else if (this.cursors.right.isDown) {
-            this.player.setVelocityX(2);
-
-            this.player.anims.play('right', true);
-        } else {
-            // this.player.setVelocityX(0);
-            if (!this.cursors.down.isDown && ! this.cursors.up.isDown) {
-
-                this.player.anims.play('turn', true);
+            if (Phaser.Math.Distance.BetweenPoints(this.hook, this.player) > 300) {
+                this.unHook();
             }
         }
 
-        if (this.cursors.down.isDown) {
-            this.player.setVelocityY(2);
-            this.player.anims.play('up', true);
-        } else if (this.cursors.up.isDown) {
+        if (this.rope && this.hookedObject) {
+            // @ts-ignore
+            if (this.hookedObject.gameObject) {
+                // @ts-ignore
+                this.ropeLine.setTo(this.player.x, this.player.y, this.hookedObject.gameObject.x, this.hookedObject.gameObject.y)
+                this.ropeGraphics.clear();
+                this.ropeGraphics.strokeLineShape(this.ropeLine);
+            }
+
+            // @ts-ignore
+            if(this.hookedObject.gameObject?.getData('type') === 'obsticle') {
+                // @ts-ignore
+                const v = this.hookedObject.position as Phaser.Math.Vector2;
+                // @ts-ignore
+                this.player.applyForceFrom(v, {x: 0.0002, y: 0.002});
+            }
+
+            this.rope.length -= 1.5;
+
+            if (this.rope.length < 30) {
+                this.unHook();
+            }
+        }
+
+
+        const cursors = this.input.keyboard.createCursorKeys();
+        if (cursors.left.isDown) {
+            this.player.setVelocityX(-2);
+
+        } else if (cursors.right.isDown) {
+            this.player.setVelocityX(2);
+        }
+
+        if (cursors.down.isDown) {
+            this.player.setVelocityY(1);
+        } else if (cursors.up.isDown) {
             this.player.setVelocityY(-2);
-            this.player.anims.play('up', true);
         } 
 
         // this.add.tileSprite(0,200, 0, 0, 'grass')
@@ -284,6 +392,8 @@ export class Game extends Phaser.Scene
             this.addWallsLeft(lastWallBottomY);
             this.addWallsRight(lastWallBottomY);
         }
+
+        this.duckAnimation();
     }
 
 
@@ -297,20 +407,9 @@ export class Game extends Phaser.Scene
 
         this.collisionCatergories.addWall(wall);
 
-        // obs
-        [1,2,3,4,5].forEach(() => {
-            const y = Phaser.Math.Between(posY, posY+h);
-            const x = Phaser.Math.Between(50, 500);
-            const o = this.matter.add.image(x, y, Phaser.Utils.Array.GetRandom(['barrel', 'box']));
+      
 
-            o.setRotation(Math.random() * 6);
-            o.setFrictionAir(0.9);
-            this.obsticles.push(o);
-
-            this.collisionCatergories.addBox(o);
-        });
-
-        [1,2].forEach(() => {
+        [1,2,3].forEach(() => {
             const y = Phaser.Math.Between(posY, posY+h);
             const x = Phaser.Math.Between(50, 500);
             const c = this.matter.add.image(x, y, 'cookie');
@@ -318,10 +417,33 @@ export class Game extends Phaser.Scene
 
             c.setFrictionAir(0.95);
             c.setMass(0.01);
-            this.obsticles.push(c);
+            this.cookies.push(c);
+            this.player.setOnCollideWith(c.body, this.eatCookie.bind(this));
 
             this.collisionCatergories.addBox(c);
         });
+    }
+
+    dropGarbage(first = false) {
+        const minY = first ? this.player.y + 100 :  this.player.y + 350;
+        const h = 300;
+        // obs
+        [1,2,3,4,5].forEach(() => {
+            const y = Phaser.Math.Between(minY, minY + h );
+            const x = Phaser.Math.Between(50, 500);
+            const o = this.matter.add.image(x, y, Phaser.Utils.Array.GetRandom(['barrel', 'box']));
+            o.setData('type', 'obsticle');
+
+            o.setRotation(Math.random() * 6);
+            o.setFrictionAir(0.4);
+            // @ts-ignore
+            o.applyForce({x: 0 , y: -0.08});
+            this.obsticles.push(o);
+
+            this.collisionCatergories.addBox(o);
+        });
+
+        this.time.delayedCall(3000, this.dropGarbage, null, this);
     }
 
     addWallsRight(posY) {
@@ -332,7 +454,5 @@ export class Game extends Phaser.Scene
         this.wallRightGroup.push(wall);
 
         this.collisionCatergories.addWall(wall);
-
-        
     }
 }
