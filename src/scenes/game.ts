@@ -274,9 +274,9 @@ export class Game extends Phaser.Scene
             this.player.anims.play('left', true);
         } else {
             if (this.player.body.velocity.y > 0) {
-                this.player.anims.play('turn', true);
-            } else {
                 this.player.anims.play('up', true);
+            } else {
+                this.player.anims.play('turn', true);
             }
         }
     }
@@ -285,6 +285,7 @@ export class Game extends Phaser.Scene
         if (this.player.y - this.hole.y < 20) {
             
             this.fatText.setText('Fat: Dead');
+            this.fatText.setScale(2);
             this.cameras.main.on('camerafadeoutcomplete', function () {
                 location.reload();
                 // this.scene.restart();
@@ -356,10 +357,10 @@ export class Game extends Phaser.Scene
             this.player.setVelocityX(2);
         }
 
-        if (cursors.down.isDown) {
-            this.player.setVelocityY(1);
-        } else if (cursors.up.isDown) {
+        if (cursors.up.isDown) {
             this.player.setVelocityY(-2);
+        } else {
+            this.player.setVelocityY(0.5);
         } 
 
         // this.add.tileSprite(0,200, 0, 0, 'grass')
